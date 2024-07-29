@@ -4,7 +4,7 @@ import pandas as pd
 import altair as alt
 
 # Set the backend API endpoint
-BACKEND_API_URL = 'http://your-ec2-public-dns:5000'
+BACKEND_API_URL = 'http://13.236.135.206:5000'
 
 # Function to reset the game
 def reset_game():
