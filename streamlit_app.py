@@ -6,30 +6,6 @@ import altair as alt
 # Set the backend API endpoint
 BACKEND_API_URL = 'http://13.236.135.206:5000'
 
-# Function to reset the game
-def reset_game():
-    response = requests.post(f'{BACKEND_API_URL}/reset_game')
-    if response.status_code == 200:
-        st.success('Game reset successful')
-    else:
-        st.error('Failed to reset game')
-
-# Function to start the game
-def start_game():
-    response = requests.post(f'{BACKEND_API_URL}/start_game')
-    if response.status_code == 200:
-        st.success('Game started successfully')
-    else:
-        st.error('Failed to start game')
-
-# Function to stop the game
-def stop_game():
-    response = requests.post(f'{BACKEND_API_URL}/stop_game')
-    if response.status_code == 200:
-        st.success('Game stopped successfully')
-    else:
-        st.error('Failed to stop game')
-
 # Fetch coin status
 def fetch_coin_status():
     response = requests.get(f'{BACKEND_API_URL}/coin_status')
@@ -49,13 +25,29 @@ def fetch_price_history():
         return []
 
 # UI setup
-st.title('Trading Game Dashboard')
+st.title('Game Data Dashboard')
 
-if st.button('Start Game'):
-    start_game()
+# Display metrics
+coin_status = fetch_coin_status()
+if coin_status:
+    volume, price, previous_price = coin_status['volume'], coin_status['price'], coin_status['previous_price']
+    st.metric("Volume", volume)
+    st.metric("Current Price", f"${price:.2f}")
+    price_change = price - previous_price
+    price_delta = f"${price_change:.2f}" if price_change >= 0 else f"-${abs(price_change):.2f}"
+    st.metric("Price Change", price_delta)
 
-if st.button('Stop Game'):
-    stop_game()
-
-if st.button('Reset Game'):
-    reset_game
+# Display price history chart
+price_history = fetch_price_history()
+if price_history:
+    df = pd.DataFrame(price_history, columns=['ID', 'Timestamp', 'Coin Price'])
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+    chart = alt.Chart(df).mark_line(point=True).encode(
+        x='Timestamp:T',
+        y='Coin Price:Q'
+    ).properties(
+        title='Coin Price History',
+        width=800,
+        height=400
+    )
+    st.altair_chart(chart, use_container_width=True)
